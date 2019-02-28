@@ -8,8 +8,12 @@ for image in /usr/share/minke/*.tar.gz; do
   fi
 done
 
+# Make sure various bind points exist
 mkdir -p /minke /minke/fs /minke/db /minke/skeletons/local
 touch /etc/timezone /etc/hostname
+
+# Use the local nameserver
+echo "nameserver 127.0.0.1" > /etc/resolv.conf
 
 docker container rm minke
 docker run --name minke \
