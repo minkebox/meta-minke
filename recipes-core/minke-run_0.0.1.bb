@@ -6,8 +6,8 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 inherit systemd
 
-PROVIDES = "minke"
-RPROVIDES_${PN} = "minke"
+PROVIDES = "minke-run"
+RPROVIDES_${PN} = "minke-run"
 
 SRCREV = "master"
 PR = "r1"

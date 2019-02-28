@@ -1,0 +1,7 @@
+# short-description: Create an EFI disk image for genericx86*
+# long-description: Creates a partitioned EFI disk image for genericx86* machines
+part /boot --source bootimg-efi --sourceparams="loader=grub-efi" --ondisk sda --label msdos --active --align 1024
+part swap --ondisk sda --size 64 --label swap1 --fstype=swap
+part / --source rootfs --ondisk sda --fstype=ext4 --label platform --align 1024 --use-uuid
+
+bootloader --ptable gpt --timeout=1 --append="rootfstype=ext4 console=ttyS0,115200 console=tty0"
