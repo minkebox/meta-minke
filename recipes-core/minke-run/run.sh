@@ -1,6 +1,6 @@
 #! /bin/sh
 
-#IFACE=br0
+SWAPSIZE=100M
 
 # Install base images. Remove as we go so we don't do it again
 for image in /usr/share/minke/*.tar.gz; do
@@ -10,19 +10,12 @@ for image in /usr/share/minke/*.tar.gz; do
   fi
 done
 
-# Create home network
-#IP=$(ip addr show dev ${IFACE} | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n1)
-#NET=$(echo ${IP} | sed "s/^\([0-9]\+.[0-9]\+.[0-9]\+\).*$/\1/")
-
-#docker network rm home
-#docker network create --driver=bridge \
-#  --subnet=${NET}.0/24 \
-#  --gateway=${NET}.1 \
-#  -o "com.docker.network.bridge.name=${IFACE}" \
-#  home
-
-# Deallocate local adddress so we can re-use it in Minke
-#ifconfig ${IFACE} 0.0.0.0
+# Create some swap space
+SWAPFILE=/swapfile
+fallocate --length ${SWAPSIZE} ${SWAPFILE}
+chmod 600 ${SWAPFILE}
+mkswap ${SWAPFILE}
+swapon ${SWAPFILE}
 
 mkdir -p /minke /minke/fs /minke/db /minke/skeletons/local
 touch /etc/timezone 
