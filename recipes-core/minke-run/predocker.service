@@ -1,0 +1,11 @@
+[Unit]
+Description=PreDocker
+Before=docker.service
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/share/minke/prerun.sh
+
+[Install]
+WantedBy=multi-user.target

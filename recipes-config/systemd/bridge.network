@@ -3,4 +3,3 @@ Name=br0
 
 [Network]
 DHCP=ipv4
-LinkLocalAddressing=no

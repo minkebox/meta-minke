@@ -11,9 +11,9 @@ RPROVIDES_${PN} = "minke-run"
 
 SRCREV = "master"
 PR = "r1"
-SRC_URI += "file://minke.service file://run.sh"
+SRC_URI += "file://minke.service file://predocker.service file://run.sh file://prerun.sh"
 
-SYSTEMD_SERVICE_${PN} = "minke.service"
+SYSTEMD_SERVICE_${PN} = "minke.service predocker.service"
 SYSTEMD_AUTO_ENABLE_${PN} = "enable"
 
 IMAGENAMES = "minke minke-helper"
@@ -22,11 +22,13 @@ IMAGEVERSION = "latest"
 do_install() {
   install -d ${D}${systemd_system_unitdir}
   install -m 0644 ${WORKDIR}/minke.service ${D}${systemd_system_unitdir}
+  install -m 0644 ${WORKDIR}/predocker.service ${D}${systemd_system_unitdir}
 
   install -d ${D}${sysconfdir}
 
   install -d ${D}${datadir}/minke
   install -m 0755 ${WORKDIR}/run.sh ${D}${datadir}/minke
+  install -m 0755 ${WORKDIR}/prerun.sh ${D}${datadir}/minke
   for imagename in ${IMAGENAMES}; do
     /usr/bin/docker image save registry.gitlab.com/minkebox/${imagename}:${IMAGEVERSION} -o ${D}${datadir}/minke/${imagename}.tar
     gzip ${D}${datadir}/minke/${imagename}.tar
