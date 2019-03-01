@@ -8,6 +8,8 @@ IMAGE_INSTALL = "\
   os-release \
   \
   docker \
+  ca-certificates \
+  \
   kernel-module-br-netfilter kernel-module-xt-conntrack kernel-module-nf-conntrack-netlink kernel-module-xfrm-user kernel-module-xt-addrtype \
   kernel-module-ipvlan kernel-module-xt-ipvs kernel-module-vxlan kernel-module-ip-vs kernel-module-ip-vs-rr \
   \
