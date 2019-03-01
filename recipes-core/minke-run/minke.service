@@ -5,6 +5,7 @@ After=docker.service network-online.target
 [Service]
 Type=oneshot
 ExecStart=/usr/share/minke/run.sh
+ExecStartPost=/sbin/reboot
 
 [Install]
 WantedBy=multi-user.target

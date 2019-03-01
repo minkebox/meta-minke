@@ -27,7 +27,7 @@ fi
 
 docker container rm minke
 docker run --name minke \
-  -d --privileged \
+  --privileged \
   -v /etc/timezone:/etc/timezone \
   -v /etc/hostname:/etc/hostname \
   -v /etc/systemd/network/bridge.network:/etc/systemd/network/bridge.network \
