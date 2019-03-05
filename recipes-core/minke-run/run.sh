@@ -25,15 +25,30 @@ if [ "${DOCKERIPNET}" != "${ORIGINALIPNET}" ]; then
   fi
 fi
 
-docker container rm minke
-docker run --name minke \
-  --privileged \
-  -v /etc/timezone:/etc/timezone \
-  -v /etc/hostname:/etc/hostname \
-  -v /etc/systemd/network/bridge.network:/etc/systemd/network/bridge.network \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  --mount type=bind,source=/minke/fs,target=/minke/fs,bind-propagation=rshared \
-  --mount type=bind,source=/minke/db,target=/minke/db,bind-propagation=rshared \
-  --mount type=bind,source=/minke/skeletons/local,target=/app/skeletons/local,bind-propagation=rshared \
-  --network=host \
-  registry.gitlab.com/minkebox/minke
+RESTART_REASON=/tmp/minke-restart-reason
+
+while true; do 
+
+  echo "RUNNING" > ${RESTART_REASON}
+
+  docker container rm minke
+  docker run --name minke \
+    --privileged \
+    -v /etc/timezone:/etc/timezone \
+    -v /etc/hostname:/etc/hostname \
+    -v /etc/systemd/network/bridge.network:/etc/systemd/network/bridge.network \
+    -v ${RESTART_REASON}:${RESTART_REASON} \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    --mount type=bind,source=/minke/fs,target=/minke/fs,bind-propagation=rshared \
+    --mount type=bind,source=/minke/db,target=/minke/db,bind-propagation=rshared \
+    --mount type=bind,source=/minke/skeletons/local,target=/app/skeletons/local,bind-propagation=rshared \
+    --network=host \
+    registry.gitlab.com/minkebox/minke
+
+  case "$(cat ${RESTART_REASON})" in
+    halt) shutdown -h now ;;
+    reboot) shutdown -r now ;;
+    *) ;;
+  esac
+
+done
