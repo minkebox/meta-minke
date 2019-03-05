@@ -26,14 +26,15 @@ if [ "${DOCKERIPNET}" != "${ORIGINALIPNET}" ]; then
 fi
 
 RESTART_REASON=/tmp/minke-restart-reason
+echo "reboot" > ${RESTART_REASON}
 
 while true; do 
 
-  echo "RUNNING" > ${RESTART_REASON}
 
   docker container rm minke
   docker run --name minke \
     --privileged \
+    -e RESTART_REASON="$(cat ${RESTART_REASON})" \
     -v /etc/timezone:/etc/timezone \
     -v /etc/hostname:/etc/hostname \
     -v /etc/systemd/network/bridge.network:/etc/systemd/network/bridge.network \
