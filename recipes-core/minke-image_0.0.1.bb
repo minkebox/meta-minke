@@ -17,11 +17,11 @@ IMAGE_INSTALL = "\
   \
   parted e2fsprogs-resize2fs \
   \
-  minke-run \
+  minke-run dnf-automatic-restart tracer \
   \
   ${CORE_IMAGE_EXTRA_INSTALL}"
 
-IMAGE_LINGUAS = " "
+IMAGE_FEATURES += "package-management"
 
 inherit core-image
 
