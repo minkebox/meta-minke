@@ -24,8 +24,6 @@ do_install() {
   install -m 0644 ${WORKDIR}/minke.service ${D}${systemd_system_unitdir}
   install -m 0644 ${WORKDIR}/predocker.service ${D}${systemd_system_unitdir}
 
-  install -d ${D}${sysconfdir}
-
   install -d ${D}${datadir}/minke
   install -m 0755 ${WORKDIR}/run.sh ${D}${datadir}/minke
   install -m 0755 ${WORKDIR}/prerun.sh ${D}${datadir}/minke
