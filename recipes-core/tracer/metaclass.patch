@@ -1,0 +1,19 @@
+--- tracer/tracer/resources/processes.py.orig	2019-03-07 08:48:17.004636163 +0000
++++ tracer/tracer/resources/processes.py	2019-03-07 08:49:03.147924736 +0000
+@@ -23,7 +23,6 @@
+ import time
+ import os
+ import re
+-from future.utils import with_metaclass
+ 
+ 
+ class Processes(object):
+@@ -157,7 +156,7 @@
+ 		return cls._cache[pid]
+ 
+ 
+-class Process(with_metaclass(ProcessMeta, ProcessWrapper)):
++class Process(ProcessWrapper, metaclass=ProcessMeta):
+ 	"""
+ 	Represent the process instance uniquely identifiable through PID
+ 

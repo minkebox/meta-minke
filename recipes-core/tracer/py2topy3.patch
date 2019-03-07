@@ -1,0 +1,9 @@
+--- a/bin/tracer.py	2019-03-07 07:57:45.203957030 +0000
++++ b/bin/tracer.py	2019-03-07 07:57:49.523907725 +0000
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/usr/bin/python3
+ #-*- coding: utf-8 -*-
+ # tracer.py
+ # Tracer finds outdated running applications in your system
+ 
