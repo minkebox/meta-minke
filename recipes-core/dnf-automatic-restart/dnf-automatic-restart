@@ -1,0 +1,177 @@
+#!/usr/bin/env bash
+
+# Automatically restart machine or updated services after dnf-automatic.
+#
+# The following is required:
+#   - DNF tracer plugin and tracer
+#     $ dnf install -y dnf-plugins-extras-tracer
+#     http://dnf-plugins-extras.readthedocs.io/en/latest/tracer.html
+#     http://tracer-package.com/
+#
+#   - DNF Automatic
+#     $ dnf install -y dnf-automatic && systemctl enable dnf-automatic-install.timer
+#     http://dnf.readthedocs.io/en/latest/automatic.html
+#
+#   - DNF Automatic drop-in to run this script after DNF Automatic ran
+#     $ systemctl edit dnf-automatic-install.service
+#
+#     Enter the following contents:
+#
+#     [Service]
+#     # Path to this script.
+#     ExecStartPost=/usr/local/sbin/dnf-automatic-restart
+#
+# The activity of this script can be monitored using
+# $ journalctl --unit dnf-automatic-install.service
+
+set -euo pipefail
+
+show_help() {
+  cat << EOF
+Usage: ${0##*/} [-d] [-h] [-n HOURS] [-r HOUR]
+
+Automatically restart machine or updated services after dnf-automatic.
+
+    -d        disable reboot
+    -h        display this help and exit
+    -n HOURS  no automatic reboot between hours (e.g. 8-22)
+    -r HOUR   schedule automatic reboot at hour (e.g. 0)
+EOF
+}
+
+error() {
+  >&2 printf 'Error: %s\n' "$1"
+  show_help >&2
+  exit 1
+}
+
+trigger_reboot() {
+  if [[ "$disable_reboot" = true ]]; then
+    echo 'Rebooting is disabled'
+    exit
+  fi
+  if [[ -n $no_reboot_from && -n $no_reboot_to ]]; then
+    hour=$(date +%k)
+
+    if ((hour >= no_reboot_from && hour <= no_reboot_to)); then
+      echo 'Rebooting the system is disallowed right now'
+
+      if [[ -z $reboot_at ]]; then
+        >&2 'Skipped scheduling reboot because reboot time was not specified'
+        exit 1
+      fi
+
+      echo "Scheduling reboot at $reboot_at:00"
+      at "${reboot_at}00" <<< 'systemctl reboot'
+      exit
+    fi
+  fi
+
+  if [[ -n $reboot_at && -z $no_reboot_from && -z $no_reboot_to ]]; then
+    printf 'Scheduling reboot at %s:00\n' "$reboot_at"
+    at "${reboot_at}00" <<< 'systemctl reboot'
+    exit
+  fi
+
+  echo 'Rebooting system'
+  systemctl reboot
+  exit
+}
+
+OPTIND=1 # Reset is necessary if getopts was used previously in the script.
+numeric='^[0-9]+$'
+disable_reboot=false
+no_reboot_from=
+no_reboot_to=
+reboot_at=
+while getopts ":dhn:r:" opt; do
+  case "$opt" in
+      d)
+        disable_reboot=true
+        ;;
+      h)
+        show_help
+        exit 0
+        ;;
+      n)
+        no_reboot_from=${OPTARG%%-*}
+        no_reboot_to=${OPTARG##*-}
+
+        if ! [[ $OPTARG =~ '-' ]]; then
+          error 'No automatic reboot between hours must be a range separated by minus (-)'
+        fi
+
+        if ! [[ $no_reboot_from =~ $numeric && $no_reboot_to =~ $numeric ]]; then
+          error 'No automatic reboot between hours must be numeric.'
+        fi
+
+        if ((no_reboot_to < no_reboot_from)); then
+          error 'No automatic reboot between hours must be a valid "from-to" range.'
+        fi
+        ;;
+      r)
+        reboot_at="$(printf %02d "$OPTARG")"
+
+        if ! [[ $reboot_at =~ $numeric ]]; then
+          error 'Reboot at hour must be numeric.'
+        fi
+        ;;
+      :)
+        error "Option -$OPTARG requires an argument."
+        ;;
+      '?')
+        error "Invalid option: -$OPTARG"
+        ;;
+  esac
+done
+
+tracer_out="$(tracer || {
+  exit_code=$?
+  if [[ $exit_code > 0 && $exit_code < 100 ]]; then
+    >&2 printf 'Tracer failed with exit code %s\n' "$exit_code"
+    exit $exit_code
+  fi
+})"
+
+printf 'tracer output:\n%s\n' "$tracer_out"
+
+daemon_reloaded=false
+(tracer --services-only || true) | tail -n +3 | sort | uniq | while read -r line; do
+  if [[ "$daemon_reloaded" == 'false' ]]; then
+    echo 'Reloading systemd daemon configuration'
+    systemctl daemon-reload
+    daemon_reloaded=true
+  fi
+
+  printf 'Restarting service using %s\n' "$line"
+  $line || {
+    exit_code=$?
+    if [[ $exit_code > 0 ]]; then
+      >&2 printf '%s failed with exit code %s\n' "$line" "$exit_code"
+    fi
+  }
+
+  if [[ "$line" == *firewalld* ]] && systemctl is-active --quiet docker; then
+    echo 'Restarting docker because firewalld was restarted'
+    systemctl restart docker
+  fi
+done
+
+# Kernel-only updates are not detected by tracer.
+# https://github.com/FrostyX/tracer/issues/45
+#running_kernel="$(uname -r)"
+#installed_kernel="$(grep Fedora /boot/grub2/grubenv | sed -e 's/.*Fedora\s(\(.*\))\s.*/\1/')"
+running_kernel="$(uname -r | sed -e 's/\([0-9.]*\).*/\1/')"
+installed_kernel="$(rpm -q kernel | sed -e 's/kernel-\([0-9.]*\).*/\1/')"
+
+if [[ "$running_kernel" != "$installed_kernel" ]]; then
+  printf 'The kernel was updated from %s to %s\n' "$running_kernel" "$installed_kernel"
+  trigger_reboot
+fi
+
+for unit in systemd auditd; do
+  if [[ "$tracer_out" == *$unit* ]]; then
+    printf '%s was updated\n' "$unit"
+    trigger_reboot
+  fi
+done
