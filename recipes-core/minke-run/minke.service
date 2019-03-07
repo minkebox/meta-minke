@@ -3,7 +3,7 @@ Description=Minke
 After=docker.service network-online.target
 
 [Service]
-Type=oneshot
+Type=simple
 ExecStart=/usr/share/minke/run.sh
 
 [Install]
