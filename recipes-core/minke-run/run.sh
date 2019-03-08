@@ -32,7 +32,7 @@ fi
 RESTART_REASON=/tmp/minke-restart-reason
 echo "exit" > ${RESTART_REASON}
 TRACER_OUT=/tmp/tracer.out
-touch ${TRACER_OUT}
+cp /dev/null ${TRACER_OUT}
 
 while true; do 
   docker container rm minke
@@ -53,7 +53,7 @@ while true; do
   case "$(cat ${RESTART_REASON})" in
     halt) systemctl poweroff ;;
     reboot) systemctl reboot ;;
-    update-native) systemctl start dnf-automatic-restart ;;
+    update-native) cp /dev/null ${TRACER_OUT} ; systemctl start dnf-automatic-restart ;;
     exit) exit ;;
     *) ;;
   esac
