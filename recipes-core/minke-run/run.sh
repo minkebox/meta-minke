@@ -51,10 +51,10 @@ while true; do
     --network=host \
     registry.gitlab.com/minkebox/minke
   case "$(cat ${RESTART_REASON})" in
-    halt)   systemctl poweroff ;;
+    halt) systemctl poweroff ;;
     reboot) systemctl reboot ;;
-    update) systemctl start dnf-automatic-restart ;;
-    exit)   exit ;;
+    update-native) systemctl start dnf-automatic-restart ;;
+    exit) exit ;;
     *) ;;
   esac
 done
