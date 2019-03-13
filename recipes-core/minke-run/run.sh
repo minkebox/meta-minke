@@ -29,26 +29,6 @@ if [ "${DOCKERIPNET}" != "${ORIGINALIPNET}" ]; then
   fi
 fi
 
-# Format /dev/sdb which will be the large bulk storage disk
-# Check for the minke-store flag and don't format if we find it.
-create_store_disk() {
-  MNT=/mnt/store
-  DISK=/dev/sdb
-  PART=1
-  FLAG=.minke-store
-  if [ "$(cat /proc/mounts | grep ${MNT})" = "" ]; then
-    mount ${MNT}
-  fi
-  if [ ! -f ${MNT}/${FLAG} ]; then
-    umount ${MNT}
-    parted -s ${DISK} "mklabel gpt"
-    parted -s -a opt ${DISK} "mkpart store ext4 0% 100%"
-    mkfs.ext4 -F ${DISK}${PART}
-    mount ${MNT}
-    touch ${MNT}/${FLAG}
-  fi
-}
-
 RESTART_REASON=/tmp/minke-restart-reason
 echo "exit" > ${RESTART_REASON}
 TRACER_OUT=/tmp/tracer.out
@@ -63,6 +43,7 @@ while true; do
     --env RESTART_REASON="${REASON}" \
     --mount type=bind,source=/etc/timezone,target=/etc/timezone,bind-propagation=rshared \
     --mount type=bind,source=/etc/hostname,target=/etc/hostname,bind-propagation=rshared \
+    --mount type=bind,source=/etc/fstab,target=/etc/fstab,bind-propagation=rshared \
     --mount type=bind,source=/etc/systemd/network/bridge.network,target=/etc/systemd/network/bridge.network,bind-propagation=rshared \
     --mount type=bind,source=${RESTART_REASON},target=${RESTART_REASON},bind-propagation=rshared \
     --mount type=bind,source=${TRACER_OUT},target=${TRACER_OUT},bind-propagation=rshared \
@@ -77,7 +58,6 @@ while true; do
     halt) systemctl poweroff ;;
     reboot) systemctl reboot ;;
     update-native) cp /dev/null ${TRACER_OUT} ; systemctl start dnf-automatic-restart ;;
-    create-store-disk) create_store_disk ;;
     exit) exit ;;
     *) ;;
   esac
