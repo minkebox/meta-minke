@@ -12,7 +12,7 @@ if [ ! -f /usr/share/minke/docker-image-install-done ]; then
 fi
 
 # Make sure various bind points exist
-mkdir -p /minke /minke/fs /minke/db /minke/skeletons/local
+mkdir -p /minke /minke/apps /minke/db /minke/skeletons/local
 touch /etc/timezone /etc/hostname /etc/systemd/network/bridge.network
 
 # Use the local nameserver
@@ -29,6 +29,26 @@ if [ "${DOCKERIPNET}" != "${ORIGINALIPNET}" ]; then
   fi
 fi
 
+# Format /dev/sdb which will be the large bulk storage disk
+# Check for the minke-store flag and don't format if we find it.
+create_store_disk() {
+  MNT=/mnt/store
+  DISK=/dev/sdb
+  PART=1
+  FLAG=.minke-store
+  if [ "$(cat /proc/mounts | grep ${MNT})" = "" ]; then
+    mount ${MNT}
+  fi
+  if [ ! -f ${MNT}/${FLAG} ]; then
+    umount ${MNT}
+    parted -s ${DISK} "mklabel gpt"
+    parted -s -a opt ${DISK} "mkpart store ext4 0% 100%"
+    mkfs.ext4 -F ${DISK}${PART}
+    mount ${MNT}
+    touch ${MNT}/${FLAG}
+  fi
+}
+
 RESTART_REASON=/tmp/minke-restart-reason
 echo "exit" > ${RESTART_REASON}
 TRACER_OUT=/tmp/tracer.out
@@ -36,24 +56,28 @@ cp /dev/null ${TRACER_OUT}
 
 while true; do 
   docker container rm minke
+  REASON=$(cat ${RESTART_REASON})
+  echo "exit" > ${RESTART_REASON}
   docker run --name minke \
     --privileged \
-    -e RESTART_REASON="$(cat ${RESTART_REASON})" \
-    -v /etc/timezone:/etc/timezone \
-    -v /etc/hostname:/etc/hostname \
-    -v /etc/systemd/network/bridge.network:/etc/systemd/network/bridge.network \
-    -v ${RESTART_REASON}:${RESTART_REASON} \
-    -v ${TRACER_OUT}:${TRACER_OUT} \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    --mount type=bind,source=/minke/fs,target=/minke/fs,bind-propagation=rshared \
+    --env RESTART_REASON="${REASON}" \
+    --mount type=bind,source=/etc/timezone,target=/etc/timezone,bind-propagation=rshared \
+    --mount type=bind,source=/etc/hostname,target=/etc/hostname,bind-propagation=rshared \
+    --mount type=bind,source=/etc/systemd/network/bridge.network,target=/etc/systemd/network/bridge.network,bind-propagation=rshared \
+    --mount type=bind,source=${RESTART_REASON},target=${RESTART_REASON},bind-propagation=rshared \
+    --mount type=bind,source=${TRACER_OUT},target=${TRACER_OUT},bind-propagation=rshared \
+    --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock,bind-propagation=rshared \
+    --mount type=bind,source=/minke/apps,target=/minke/apps,bind-propagation=rshared \
     --mount type=bind,source=/minke/db,target=/minke/db,bind-propagation=rshared \
     --mount type=bind,source=/minke/skeletons/local,target=/app/skeletons/local,bind-propagation=rshared \
+    --mount type=bind,source=/mnt,target=/mnt,bind-propagation=rshared \
     --network=host \
     registry.gitlab.com/minkebox/minke
   case "$(cat ${RESTART_REASON})" in
     halt) systemctl poweroff ;;
     reboot) systemctl reboot ;;
     update-native) cp /dev/null ${TRACER_OUT} ; systemctl start dnf-automatic-restart ;;
+    create-store-disk) create_store_disk ;;
     exit) exit ;;
     *) ;;
   esac
