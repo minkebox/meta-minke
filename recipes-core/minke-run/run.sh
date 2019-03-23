@@ -53,6 +53,7 @@ while true; do
     --mount type=bind,source=/minke/skeletons/local,target=/app/skeletons/local,bind-propagation=rshared \
     --mount type=bind,source=/mnt,target=/mnt,bind-propagation=rshared \
     --network=host \
+    --log-driver json-file --log-opt max-size=10k --log-opt max-file=1 \
     registry.gitlab.com/minkebox/minke
   case "$(cat ${RESTART_REASON})" in
     halt) systemctl poweroff ;;
