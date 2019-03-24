@@ -15,10 +15,6 @@ fi
 mkdir -p /minke /minke/apps /minke/db /minke/skeletons/local
 touch /etc/timezone /etc/hostname /etc/systemd/network/bridge.network
 
-# Use the local nameserver
-OLDRESOLV=$(cat /etc/resolv.conf)
-echo "nameserver 127.0.0.1" > /etc/resolv.conf
-
 # Check that the Docker home network is still consistent with our IP and default route. If not, we delete the
 # Docker network and reboot (to force the network to setup again)
 DOCKERIPNET=$(docker network inspect home -f '{{(index .IPAM.Config 0).Gateway}}:{{(index .IPAM.Config 0).AuxiliaryAddresses.DefaultGatewayIPv4}}')
@@ -28,6 +24,10 @@ if [ "${DOCKERIPNET}" != "${ORIGINALIPNET}" ]; then
     reboot
   fi
 fi
+
+# Use the local nameserver
+rm -rf /etc/resolv.conf
+echo "nameserver 127.0.0.1" > /etc/resolv.conf
 
 RESTART_REASON=/tmp/minke-restart-reason
 echo "exit" > ${RESTART_REASON}
@@ -63,6 +63,6 @@ while true; do
     *) ;;
   esac
 done
-
-# Put back the old resolv
-echo ${OLDRESOLV} > /etc/resolv.conf
+                                                                                                                                                                     
+rm -f /etc/resolv.conf
+ln -s /etc/resolv-conf.systemd /etc/resolv.conf
