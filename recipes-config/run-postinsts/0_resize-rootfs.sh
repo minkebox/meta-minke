@@ -1,8 +1,8 @@
 #! /bin/sh
 
-DEVICE=/dev/sda
+ROOT=$(mount | grep ' / ' | cut -d' ' -f 1 | sed s/[0-9]$//)
 PARTITION=2
 
-echo "f" | script -qfc "parted ${DEVICE} -l" /dev/null
-parted ${DEVICE} "resizepart ${PARTITION} -1"
-resize2fs ${DEVICE}${PARTITION}
+(echo "ok" ; echo "f") | script -qfc "parted ${ROOT} -l" /dev/null
+parted ${ROOT} "resizepart ${PARTITION} -1"
+resize2fs ${ROOT}${PARTITION}
