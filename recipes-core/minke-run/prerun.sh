@@ -9,7 +9,8 @@ GW=$(ip route show | grep default | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" |
 if [ "${IP}" = "" ]; then
   IP=192.168.1.200
   GW=192.168.1.1
-  ip addr add ${IP}/24 dev ${IFACE}
+  BCAST=192.168.1.255
+  ip addr add ${IP}/24 broadcast ${BCAST} dev ${IFACE}
   ip link set ${IFACE} up
   ip route add default via ${GW}
 fi
