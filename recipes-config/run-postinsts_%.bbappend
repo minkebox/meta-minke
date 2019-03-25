@@ -1,6 +1,9 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-SRC_URI += "file://0_resize-rootfs.sh file://1_swap-file.sh file://2_store-disk.sh file://3_fix-boot-disk.sh"
+SRC_URI += "file://0_resize-rootfs.sh \
+  file://1_swap-file.sh \
+  file://2_store-disk.sh \
+  file://3_fix-boot-disk.sh"
 
 
 do_install_append() {
