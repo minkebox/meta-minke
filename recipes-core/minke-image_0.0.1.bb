@@ -15,6 +15,8 @@ IMAGE_INSTALL = "\
   \
   kernel-module-tun \
   \
+  kernel-modules \
+  \
   parted e2fsprogs-resize2fs e2fsprogs-mke2fs \
   \
   minke-run dnf-automatic-restart tracer \
