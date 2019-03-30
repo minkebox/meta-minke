@@ -15,7 +15,7 @@ IMAGE_INSTALL = "\
   \
   kernel-module-tun \
   \
-  kernel-modules \
+  kernel-modules linux-firmware \
   \
   parted e2fsprogs-resize2fs e2fsprogs-mke2fs \
   \
