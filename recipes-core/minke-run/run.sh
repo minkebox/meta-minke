@@ -58,7 +58,7 @@ while true; do
     --mount type=bind,source=/mnt,target=/mnt,bind-propagation=rshared \
     --network=host \
     --log-driver json-file --log-opt max-size=10k --log-opt max-file=1 \
-    registry.gitlab.com/minkebox/minke
+    registry.minkebox.net/minkebox/minke
   case "$(cat ${RESTART_REASON})" in
     halt) systemctl poweroff ;;
     reboot) systemctl reboot ;;

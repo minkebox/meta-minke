@@ -28,7 +28,7 @@ do_install() {
   install -m 0755 ${WORKDIR}/run.sh ${D}${datadir}/minke
   install -m 0755 ${WORKDIR}/prerun.sh ${D}${datadir}/minke
   for imagename in ${IMAGENAMES}; do
-    /usr/bin/docker image save registry.gitlab.com/minkebox/${imagename}:${IMAGEVERSION} -o ${D}${datadir}/minke/${imagename}.tar
+    /usr/bin/docker image save registry.minkebox.net/minkebox/${imagename}:${IMAGEVERSION} -o ${D}${datadir}/minke/${imagename}.tar
     gzip ${D}${datadir}/minke/${imagename}.tar
   done
   chown root:root -R ${D}${datadir}/minke
