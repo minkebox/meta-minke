@@ -12,7 +12,7 @@ if [ ! -f /usr/share/minke/docker-image-install-done ]; then
 fi
 
 # Make sure various bind points exist
-mkdir -p /minke /minke/apps /minke/db /minke/skeletons/local
+mkdir -p /minke /minke/apps /minke/db /minke/skeletons/local /minke/skeletons/internal
 touch /etc/timezone /etc/hostname /etc/systemd/network/bridge.network
 
 # Check that the Docker home network is still consistent with our IP and default route. If not, we delete the
@@ -37,7 +37,7 @@ echo "exit" > ${RESTART_REASON}
 TRACER_OUT=/tmp/tracer.out
 cp /dev/null ${TRACER_OUT}
 
-while true; do 
+while true; do
   docker container rm minke
   REASON=$(cat ${RESTART_REASON})
   echo "exit" > ${RESTART_REASON}
@@ -54,7 +54,7 @@ while true; do
     --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock,bind-propagation=rshared \
     --mount type=bind,source=/minke/apps,target=/minke/apps,bind-propagation=rshared \
     --mount type=bind,source=/minke/db,target=/minke/db,bind-propagation=rshared \
-    --mount type=bind,source=/minke/skeletons/local,target=/app/skeletons/local,bind-propagation=rshared \
+    --mount type=bind,source=/minke/skeletons,target=/app/skeletons,bind-propagation=rshared \
     --mount type=bind,source=/mnt,target=/mnt,bind-propagation=rshared \
     --network=host \
     --log-driver json-file --log-opt max-size=10k --log-opt max-file=1 \
@@ -67,6 +67,6 @@ while true; do
     *) ;;
   esac
 done
-                                                                                                                                                                     
+
 rm -f /etc/resolv.conf
 ln -s /etc/resolv-conf.systemd /etc/resolv.conf
