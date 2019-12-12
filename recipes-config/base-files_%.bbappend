@@ -1,1 +1,1 @@
-hostname="Minke"
+hostname="minkebox"

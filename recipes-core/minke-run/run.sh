@@ -13,7 +13,7 @@ fi
 
 # Make sure various bind points exist
 mkdir -p /minke /minke/apps /minke/db /minke/skeletons/local /minke/skeletons/internal
-touch /etc/timezone /etc/hostname /etc/systemd/network/bridge.network
+touch /etc/timezone /etc/hostname /lib/systemd/network/70-bridge.network
 
 # Check that the Docker home network is still consistent with our IP and default route. If not, we delete the
 # Docker network and reboot (to force the network to setup again)
@@ -30,7 +30,7 @@ rm -rf /etc/resolv.conf
 echo "nameserver 127.0.0.1" > /etc/resolv.conf
 
 # Find root disk
-ROOTDISK=$(mount | grep ' / ' | cut -d' ' -f 1 | sed "s:/dev/\(.*\)[0-9]$:\1:")
+ROOTDISK=$(mount | grep ' / ' | cut -d' ' -f 1 | sed "s:/dev/\(.*\)[0-9]$:\1:" | sed "s:p$::")
 
 RESTART_REASON=/tmp/minke-restart-reason
 echo "exit" > ${RESTART_REASON}
@@ -48,13 +48,14 @@ while true; do
     --mount type=bind,source=/etc/timezone,target=/etc/timezone,bind-propagation=rshared \
     --mount type=bind,source=/etc/hostname,target=/etc/hostname,bind-propagation=rshared \
     --mount type=bind,source=/etc/fstab,target=/etc/fstab,bind-propagation=rshared \
-    --mount type=bind,source=/etc/systemd/network/bridge.network,target=/etc/systemd/network/bridge.network,bind-propagation=rshared \
+    --mount type=bind,source=/lib/systemd/network/70-bridge.network,target=/etc/systemd/network/bridge.network,bind-propagation=rshared \
     --mount type=bind,source=${RESTART_REASON},target=${RESTART_REASON},bind-propagation=rshared \
     --mount type=bind,source=${TRACER_OUT},target=${TRACER_OUT},bind-propagation=rshared \
     --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock,bind-propagation=rshared \
     --mount type=bind,source=/minke/apps,target=/minke/apps,bind-propagation=rshared \
     --mount type=bind,source=/minke/db,target=/minke/db,bind-propagation=rshared \
-    --mount type=bind,source=/minke/skeletons,target=/app/skeletons,bind-propagation=rshared \
+    --mount type=bind,source=/minke/skeletons/local,target=/app/skeletons/local,bind-propagation=rshared \
+    --mount type=bind,source=/minke/skeletons/internal,target=/app/skeletons/internal,bind-propagation=rshared \
     --mount type=bind,source=/mnt,target=/mnt,bind-propagation=rshared \
     --network=host \
     --log-driver json-file --log-opt max-size=10k --log-opt max-file=1 \

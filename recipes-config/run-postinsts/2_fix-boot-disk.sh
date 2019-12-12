@@ -1,4 +1,5 @@
 #! /bin/sh
+echo "Setting up /boot"
 
 if [ "$(grep -c /boot /etc/fstab)" = "0" ]; then
   ROOT=$(mount | grep ' / ' | cut -d' ' -f 1 | sed s/[0-9]$//)

@@ -12,6 +12,7 @@ PR = "r1"
 SRC_URI = "git://github.com/FrostyX/tracer.git;protocol=https"
 
 RDEPENDS_${PN} += " \
+  python3-core \
   python3 \
   python3-setuptools \
   python3-psutil \
