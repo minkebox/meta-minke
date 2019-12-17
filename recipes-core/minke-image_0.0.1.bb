@@ -29,7 +29,7 @@ IMAGE_FEATURES += "package-management"
 
 inherit core-image
 
-WKS_FILE = "minkex86.wks"
 IMAGE_ROOTFS_SIZE ?= "12288"
-
 PACKAGE_EXCLUDE_pn-minke-image = "dnsmasq"
+
+include ${THISDIR}/machine/${MACHINE}.conf
