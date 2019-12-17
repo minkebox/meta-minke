@@ -29,11 +29,11 @@ do_install() {
   install -m 0755 ${WORKDIR}/run.sh ${D}${datadir}/minke
   install -m 0755 ${WORKDIR}/prerun.sh ${D}${datadir}/minke
 
-  if [ "${MACHINE}" = "raspberrypi4-64" ] ; then
-    IMAGEPLATFORM="linux/arm64"
-  else
-    IMAGEPLATFORM="linux/amd64"
-  fi
+  case "${MACHINE}" in
+    raspberrypi*-64)  IMAGEPLATFORM="linux/arm64" ;;
+    *x86-64)          IMAGEPLATFORM="linux/amd64" ;;
+    *)                echo "${MACHINE} not supported"; exit 1 ;;
+  esac
   for imagename in ${IMAGENAMES}; do
     /usr/bin/docker pull --platform ${IMAGEPLATFORM} registry.minkebox.net/minkebox/${imagename}:${IMAGEVERSION}
     /usr/bin/docker image save registry.minkebox.net/minkebox/${imagename}:${IMAGEVERSION} -o ${D}${datadir}/minke/${imagename}.tar
