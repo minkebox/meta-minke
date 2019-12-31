@@ -1,7 +1,7 @@
 #! /bin/sh
 echo "Creating swap"
 
-SWAPSIZE=512M
+SWAPSIZE=2048M
 SWAPFILE=/swapfile
 
 if [ ! -e ${SWAPFILE} ]; then
