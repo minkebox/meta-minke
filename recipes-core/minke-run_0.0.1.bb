@@ -11,7 +11,7 @@ RPROVIDES_${PN} = "minke-run"
 
 SRCREV = "master"
 PR = "r1"
-SRC_URI += "file://minke.service file://predocker.service file://run.sh file://prerun.sh"
+SRC_URI += "file://minke.service file://predocker.service file://run.sh file://prerun.sh file://minke-tmpfiles.conf"
 
 SYSTEMD_SERVICE_${PN} = "minke.service predocker.service"
 SYSTEMD_AUTO_ENABLE_${PN} = "enable"
@@ -29,6 +29,9 @@ do_install() {
   install -m 0755 ${WORKDIR}/run.sh ${D}${datadir}/minke
   install -m 0755 ${WORKDIR}/prerun.sh ${D}${datadir}/minke
 
+  install -d ${D}${nonarch_libdir}/tmpfiles.d
+  install -m 0644 ${WORKDIR}/minke-tmpfiles.conf ${D}${nonarch_libdir}/tmpfiles.d/minke.conf
+
   case "${MACHINE}" in
     raspberrypi*-64)  IMAGEPLATFORM="linux/arm64" ;;
     *x86-64)          IMAGEPLATFORM="linux/amd64" ;;
@@ -42,4 +45,4 @@ do_install() {
   chown root:root -R ${D}${datadir}/minke
 }
 
-FILES_${PN} += "${datadir}/minke ${systemd_system_unitdir} /minke"
+FILES_${PN} += "${datadir}/minke ${systemd_system_unitdir} /minke ${nonarch_libdir}/tmpfiles.d"
