@@ -25,6 +25,15 @@ if [ "${DOCKERIPNET}" != "${ORIGINALIPNET}" ]; then
   fi
 fi
 
+# If WLAN is active, we setup the proxy services to copy traffic from wlan to the bridge.
+# WiFi doesn't support briding natively :-(
+# And the bridge needs some sort of address otherwise parprouted gets upset
+if [ -f /tmp/pre-docker-wlan-active ]; then
+  ifconfig br0 10.241.55.45
+  /usr/sbin/parprouted br0 wlan0
+  /usr/sbin/multicast-relay --DHCP --oneInterface --interfaces br0 wlan0
+fi
+
 # Use the local nameserver
 rm -rf /etc/resolv.conf
 echo "nameserver 127.0.0.1" > /etc/resolv.conf
@@ -49,6 +58,8 @@ while true; do
     --mount type=bind,source=/etc/hostname,target=/etc/hostname,bind-propagation=rshared \
     --mount type=bind,source=/etc/fstab,target=/etc/fstab,bind-propagation=rshared \
     --mount type=bind,source=/lib/systemd/network/70-bridge.network,target=/etc/systemd/network/bridge.network,bind-propagation=rshared \
+    --mount type=bind,source=/lib/systemd/network/80-wifi.network,target=/etc/systemd/network/wlan.network,bind-propagation=rshared \
+    --mount type=bind,source=/etc/wpa_supplicant/wpa_supplicant-wlan0.conf,target=/etc/wpa_supplicant.conf,bind-propagation=rshared \
     --mount type=bind,source=${RESTART_REASON},target=${RESTART_REASON},bind-propagation=rshared \
     --mount type=bind,source=${TRACER_OUT},target=${TRACER_OUT},bind-propagation=rshared \
     --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock,bind-propagation=rshared \
