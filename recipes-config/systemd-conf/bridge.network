@@ -3,7 +3,6 @@ Name=br0
 
 [Network]
 DHCP=ipv4
-MulticastDNS=true
 
 [DHCP]
 UseDNS=false
