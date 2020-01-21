@@ -13,25 +13,38 @@ fi
 
 # Make sure various bind points exist
 mkdir -p /minke /minke/apps /minke/db /minke/skeletons/local /minke/skeletons/internal
-touch /etc/timezone /etc/hostname /lib/systemd/network/70-bridge.network
+touch /etc/timezone /etc/hostname /lib/systemd/network/70-bridge.network /lib/systemd/network/80-wifi.network /lib/systemd/network/80-wired.network /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
 
 # Check that the Docker home network is still consistent with our IP and default route. If not, we delete the
 # Docker network and reboot (to force the network to setup again)
-DOCKERIPNET=$(docker network inspect home -f '{{(index .IPAM.Config 0).Gateway}}:{{(index .IPAM.Config 0).AuxiliaryAddresses.DefaultGatewayIPv4}}')
-ORIGINALIPNET=$(cat /tmp/pre-docker-network)
-if [ "${DOCKERIPNET}" != "${ORIGINALIPNET}" ]; then
-  if docker network rm home ; then
-    reboot
-  fi
-fi
+#DOCKERIPNET=$(docker network inspect home -f '{{(index .IPAM.Config 0).Gateway}}:{{(index .IPAM.Config 0).AuxiliaryAddresses.DefaultGatewayIPv4}}')
+#ORIGINALIPNET=$(cat /tmp/pre-docker-network)
+#if [ "${DOCKERIPNET}" != "${ORIGINALIPNET}" ]; then
+#  if docker network rm home ; then
+#    reboot
+#  fi
+#fi
 
 # If WLAN is active, we setup the proxy services to copy traffic from wlan to the bridge.
-# WiFi doesn't support briding natively :-(
-# And the bridge needs some sort of address otherwise parprouted gets upset
+# WiFi doesn't support bridging natively :-(
 if [ -f /tmp/pre-docker-wlan-active ]; then
-  ifconfig br0 10.241.55.45
-  /usr/sbin/parprouted br0 wlan0
-  /usr/sbin/multicast-relay --DHCP --oneInterface --interfaces br0 wlan0
+  NWIP=$(ip addr show dev wlan0 | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}\b" | head -n1)
+  WIP=$(ip addr show dev wlan0 | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n1)
+  # The bridge needs to be on the same network as the wlan (despite it not being really bridged) otherwise
+  # things don't work properly when traffic is being proxied.
+  bridge_fix() {
+    while true; do
+      /sbin/ip addr add ${NWIP} dev br0
+      sleep 5
+    done
+  }
+  bridge_fix &
+  # Give the WLAN our *exact* address to multicast picks the correct interface
+  /sbin/ip addr add ${WIP}/32 dev wlan0
+  # Proxy ARP
+  /usr/sbin/parprouted -p wlan0 br0
+  # Proxy DHCP
+  /usr/sbin/dhcp-helper -b wlan0 -i br0
 fi
 
 # Use the local nameserver
@@ -59,6 +72,7 @@ while true; do
     --mount type=bind,source=/etc/fstab,target=/etc/fstab,bind-propagation=rshared \
     --mount type=bind,source=/lib/systemd/network/70-bridge.network,target=/etc/systemd/network/bridge.network,bind-propagation=rshared \
     --mount type=bind,source=/lib/systemd/network/80-wifi.network,target=/etc/systemd/network/wlan.network,bind-propagation=rshared \
+    --mount type=bind,source=/lib/systemd/network/80-wired.network,target=/etc/systemd/network/wired.network,bind-propagation=rshared \
     --mount type=bind,source=/etc/wpa_supplicant/wpa_supplicant-wlan0.conf,target=/etc/wpa_supplicant.conf,bind-propagation=rshared \
     --mount type=bind,source=${RESTART_REASON},target=${RESTART_REASON},bind-propagation=rshared \
     --mount type=bind,source=${TRACER_OUT},target=${TRACER_OUT},bind-propagation=rshared \
