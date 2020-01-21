@@ -4,10 +4,9 @@ LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=0636e73ff0215e8d672dc4c32c317bb3"
 
 PR = "r1"
-SRC_URI = "http://deb.debian.org/debian/pool/main/p/parprouted/parprouted_0.70.orig.tar.gz"
-SRC_URI[md5sum] = "570f5deaf09600df8f80f589de79ecdb"
+SRC_URI = "file://COPYING file://parprouted.c file://parprouted.h file://arp.c file://Makefile"
 
-S = "${WORKDIR}/parprouted-0.7"
+S = "${WORKDIR}"
 
 TARGET_CC_ARCH += "${LDFLAGS}"
 INSANE_SKIP_${PN}-dev += "dev-elf"
