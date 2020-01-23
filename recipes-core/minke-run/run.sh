@@ -25,13 +25,17 @@ touch /etc/timezone /etc/hostname /lib/systemd/network/70-bridge.network /lib/sy
 #  fi
 #fi
 
+# Remove the Docker home network and let it be recreated when Minke starts. It's possible the network
+# configuration has changed since last boot, so best to always start new.
+docker network rm home
+
 # If WLAN is active, we setup the proxy services to copy traffic from wlan to the bridge.
 # WiFi doesn't support bridging natively :-(
 if [ -f /tmp/pre-docker-wlan-active ]; then
   NWIP=$(ip addr show dev wlan0 | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}\b" | head -n1)
   WIP=$(ip addr show dev wlan0 | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n1)
-  # The bridge needs to be on the same network as the wlan (despite it not being really bridged) otherwise
-  # things don't work properly when traffic is being proxied.
+  # The bridge needs to have the same IP/MASK as the WLAN otherwise traffic isn't proxied correctly.
+  # We also need to put this back by hand because adding devices to the bridge can make it disappear
   bridge_fix() {
     while true; do
       /sbin/ip addr add ${NWIP} dev br0
@@ -39,10 +43,10 @@ if [ -f /tmp/pre-docker-wlan-active ]; then
     done
   }
   bridge_fix &
-  # Give the WLAN our *exact* address to multicast picks the correct interface
+  # Give the WLAN our *exact* address so multicast picks the correct interface
   /sbin/ip addr add ${WIP}/32 dev wlan0
   # Proxy ARP
-  /usr/sbin/parprouted -p wlan0 br0
+  /usr/sbin/parprouted wlan0 br0
   # Proxy DHCP
   /usr/sbin/dhcp-helper -b wlan0 -i br0
 fi
