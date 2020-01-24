@@ -15,16 +15,6 @@ fi
 mkdir -p /minke /minke/apps /minke/db /minke/skeletons/local /minke/skeletons/internal
 touch /etc/timezone /etc/hostname /lib/systemd/network/70-bridge.network /lib/systemd/network/80-wifi.network /lib/systemd/network/80-wired.network /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
 
-# Check that the Docker home network is still consistent with our IP and default route. If not, we delete the
-# Docker network and reboot (to force the network to setup again)
-#DOCKERIPNET=$(docker network inspect home -f '{{(index .IPAM.Config 0).Gateway}}:{{(index .IPAM.Config 0).AuxiliaryAddresses.DefaultGatewayIPv4}}')
-#ORIGINALIPNET=$(cat /tmp/pre-docker-network)
-#if [ "${DOCKERIPNET}" != "${ORIGINALIPNET}" ]; then
-#  if docker network rm home ; then
-#    reboot
-#  fi
-#fi
-
 # Remove the Docker home network and let it be recreated when Minke starts. It's possible the network
 # configuration has changed since last boot, so best to always start new.
 docker network rm home
@@ -34,7 +24,7 @@ docker network rm home
 if [ -f /tmp/pre-docker-wlan-active ]; then
   NWIP=$(ip addr show dev wlan0 | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}\b" | head -n1)
   WIP=$(ip addr show dev wlan0 | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n1)
-  # The bridge needs to have the same IP/MASK as the WLAN otherwise traffic isn't proxied correctly.
+  # The bridge needs to have the same IP/MASK as the WLAN otherwise the DHCP proxy doesn't work correctly.
   # We also need to put this back by hand because adding devices to the bridge can make it disappear
   bridge_fix() {
     while true; do
@@ -46,7 +36,9 @@ if [ -f /tmp/pre-docker-wlan-active ]; then
   # Give the WLAN our *exact* address so multicast picks the correct interface
   /sbin/ip addr add ${WIP}/32 dev wlan0
   # Proxy ARP
-  /usr/sbin/parprouted wlan0 br0
+  /sbin/ifconfig wlan0 promisc
+  echo 1 > /proc/sys/net/ipv4/conf/wlan0/proxy_arp
+  echo 1 > /proc/sys/net/ipv4/conf/br0/proxy_arp
   # Proxy DHCP
   /usr/sbin/dhcp-helper -b wlan0 -i br0
 fi
