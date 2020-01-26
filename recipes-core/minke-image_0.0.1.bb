@@ -18,7 +18,7 @@ IMAGE_INSTALL = "\
   \
   kernel-modules linux-firmware \
   \
-  wpa-supplicant dhcp-helper \
+  wpa-supplicant iw dhcp-helper \
   \
   extra-sysctl \
   \

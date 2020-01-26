@@ -35,16 +35,15 @@ if [ -f /tmp/pre-docker-wlan-active ]; then
   bridge_fix &
   # Give the WLAN our *exact* address so multicast picks the correct interface
   ip addr add ${WIP}/32 dev wlan0
-  # Due to raspberry pi bugs, we need to put the wifi into promisicuous mode for proxy arp
-  # to work. Unfortunately doing this tends to make it crash unless we keep the wifi alive.
+  # Raspberry Pi requires promisc for proxy_arp to work on wifi
   ip link set wlan0 promisc on
-  GW=$(ip route list _ | sed "s/^default via \(.*\) dev.*$/\1/")
-  ping -q -i 10 ${GW} &
   # Proxy ARP
   echo 1 > /proc/sys/net/ipv4/conf/wlan0/proxy_arp
   echo 1 > /proc/sys/net/ipv4/conf/br0/proxy_arp
   # Proxy DHCP
   /usr/sbin/dhcp-helper -b wlan0 -i br0
+  # Make sure power saving is off
+  iw dev wlan0 set power_save off
 fi
 
 # Use the local nameserver
