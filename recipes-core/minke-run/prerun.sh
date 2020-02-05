@@ -9,7 +9,6 @@ if [ "${IP}" = "" ]; then
 else
   touch /tmp/pre-docker-wlan-active
 fi
-GW=$(ip route show | grep default | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n1)
 
 # Note first run
 FIRSTRUN=$(test -f /usr/share/minke/prerun-done || echo 'yes')
@@ -30,5 +29,3 @@ UseDNS=false
 __EOF__
   reboot
 fi
-
-echo "${IP}:${GW}" > /tmp/pre-docker-network

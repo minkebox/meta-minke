@@ -15,9 +15,16 @@ fi
 mkdir -p /minke /minke/apps /minke/db /minke/skeletons/local /minke/skeletons/internal
 touch /etc/timezone /etc/hostname /lib/systemd/network/70-bridge.network /lib/systemd/network/80-wifi.network /lib/systemd/network/80-wired.network /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
 
-# Remove the Docker home network and let it be recreated when Minke starts. It's possible the network
-# configuration has changed since last boot, so best to always start new.
-docker network rm home
+# If the home nework exists, we remove it and reboot.
+# The home network should be destroyed when rebooting, but if the machine crashed it may still exist.
+# We must remove it because docker will reset the ip address of the machine to the address stored
+# in the home network when docker starts up (ie. at this point it's already happened!). As the address
+# may be different, this will cause problems. The only solution is to remove it and reboot so this
+# wont happen next time.
+if [ "$(docker network inspect home > /dev/null 2>&1 && echo 'exists')" = "exists" ]; then
+  docker network rm home
+  reboot
+fi
 
 # If WLAN is active, we setup the proxy services to copy traffic from wlan to the bridge.
 # WiFi doesn't support bridging natively :-(
@@ -88,13 +95,22 @@ while true; do
     --log-driver json-file --log-opt max-size=10k --log-opt max-file=1 \
     registry.minkebox.net/minkebox/minke
   case "$(cat ${RESTART_REASON})" in
-    halt) systemctl poweroff ;;
-    reboot) systemctl reboot ;;
     update-native) cp /dev/null ${TRACER_OUT} ; systemctl start dnf-automatic-restart ;;
-    exit) exit ;;
+    halt|reboot|exit) break ;;
     *) ;;
   esac
 done
 
+# Remove the network so we can recreate it each time. We *must* do this because the network
+# will override the ip address of the machine, and this may be incorrect. This happens as soon
+# as docker starts up so we have to remove it during shutdown as it's too late once we start up.
+docker network rm home
+
 rm -f /etc/resolv.conf
 ln -s /etc/resolv-conf.systemd /etc/resolv.conf
+
+case "$(cat ${RESTART_REASON})" in
+  halt) systemctl poweroff ;;
+  reboot) systemctl reboot ;;
+  *) ;;
+esac
