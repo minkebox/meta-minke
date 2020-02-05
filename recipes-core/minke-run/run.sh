@@ -44,16 +44,11 @@ if [ -f /tmp/pre-docker-wlan-active ]; then
   ip addr add ${WIP}/32 dev wlan0
   # Raspberry Pi requires promisc for proxy_arp to work on wifi
   ip link set wlan0 promisc on
-  # Keep alive ping ... which seems to be necessary if promiscuous is turned on
-  #GW=$(ip route list default | sed "s/^default via \(.*\) dev.*$/\1/")
-  #ping -q -i 10 ${GW} &
   # Proxy ARP
   echo 1 > /proc/sys/net/ipv4/conf/wlan0/proxy_arp
   echo 1 > /proc/sys/net/ipv4/conf/br0/proxy_arp
   # Proxy DHCP
   /usr/sbin/dhcp-helper -b wlan0 -i br0
-  # Make sure power saving is off
-  #iw dev wlan0 set power_save off
 fi
 
 # Use the local nameserver
