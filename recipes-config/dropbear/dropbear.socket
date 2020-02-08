@@ -2,7 +2,7 @@
 Conflicts=dropbear.service
 
 [Socket]
-ListenStream=41415
+ListenStream=22
 Accept=yes
 
 [Install]
