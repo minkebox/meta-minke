@@ -1,5 +1,13 @@
 #! /bin/sh
 
+# Handle in-place upgrades of this script by copying it to a safe instance and running that instead
+if [ "$(basename $0)" = "run.sh" ]; then
+  SCRIPTPATH="$(cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P)"
+  cp "${SCRIPTPATH}/run.sh" "${SCRIPTPATH}/run.current.sh"
+  chmod 777 "${SCRIPTPATH}/run.current.sh"
+  exec "${SCRIPTPATH}/run.current.sh"
+fi
+
 # Install base images. Remove as we go so we don't do it again
 if [ ! -f /usr/share/minke/docker-image-install-done ]; then
   for image in /usr/share/minke/*.tar.gz; do
