@@ -21,7 +21,7 @@ fi
 
 # Make sure various bind points exist
 mkdir -p /minke /minke/apps /minke/db /minke/skeletons/local /minke/skeletons/internal
-touch /etc/timezone /etc/hostname /lib/systemd/network/70-bridge.network /lib/systemd/network/80-wifi.network /lib/systemd/network/80-wired.network /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+touch /etc/timezone /etc/hostname /minke/minkebox.config /lib/systemd/network/70-bridge.network /lib/systemd/network/80-wifi.network /lib/systemd/network/80-wired.network /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
 
 # If the home nework exists, we remove it and reboot.
 # The home network should be destroyed when rebooting, but if the machine crashed it may still exist.
@@ -91,6 +91,7 @@ while true; do
     --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock,bind-propagation=rshared \
     --mount type=bind,source=/minke/apps,target=/minke/apps,bind-propagation=rshared \
     --mount type=bind,source=/minke/db,target=/minke/db,bind-propagation=rshared \
+    --mount type=bind,source=/minke/minkebox.config,target=/minke/minkebox.config,bind-propagation=rshared \
     --mount type=bind,source=/minke/skeletons/local,target=/app/skeletons/local,bind-propagation=rshared \
     --mount type=bind,source=/minke/skeletons/internal,target=/app/skeletons/internal,bind-propagation=rshared \
     --mount type=bind,source=/mnt,target=/mnt,bind-propagation=rshared \
