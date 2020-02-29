@@ -63,9 +63,6 @@ fi
 rm -rf /etc/resolv.conf
 echo "nameserver 127.0.0.1" > /etc/resolv.conf
 
-# Find root disk
-ROOTDISK=$(mount | grep ' / ' | cut -d' ' -f 1 | sed "s:/dev/\(.*\)[0-9]$:\1:" | sed "s:p$::")
-
 RESTART_REASON=/tmp/minke-restart-reason
 echo "exit" > ${RESTART_REASON}
 TRACER_OUT=/tmp/tracer.out
@@ -78,7 +75,6 @@ while true; do
   docker run --name minke \
     --privileged \
     --env RESTART_REASON="${REASON}" \
-    --env ROOTDISK="${ROOTDISK}" \
     --mount type=bind,source=/etc/timezone,target=/etc/timezone,bind-propagation=rshared \
     --mount type=bind,source=/etc/hostname,target=/etc/hostname,bind-propagation=rshared \
     --mount type=bind,source=/etc/fstab,target=/etc/fstab,bind-propagation=rshared \
