@@ -24,7 +24,7 @@ IMAGE_INSTALL = "\
   \
   parted e2fsprogs-resize2fs e2fsprogs-mke2fs \
   \
-  minke-run dnf-automatic-restart tracer \
+  minke-run dnf-automatic-restart tracer tzdata \
   \
   ${MACHINE_EXTRA_RRECOMMENDS} \
   ${CORE_IMAGE_EXTRA_INSTALL}"
