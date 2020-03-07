@@ -72,7 +72,7 @@ while true; do
   docker container rm minke
   REASON=$(cat ${RESTART_REASON})
   echo "exit" > ${RESTART_REASON}
-  docker run --name minke \
+  docker run --init --name minke \
     --privileged \
     --env RESTART_REASON="${REASON}" \
     --mount type=bind,source=/etc/timezone,target=/etc/timezone,bind-propagation=rshared \
