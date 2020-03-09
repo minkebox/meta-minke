@@ -1,5 +1,7 @@
 #! /bin/sh
 # Create default network setup
+if [ ! -e /lib/systemd/network/70-bridge.network ]; then
+
 cat > /lib/systemd/network/70-bridge.network <<__EOF__
 [Match]
 Name=br0
@@ -27,3 +29,5 @@ Name=en* eth*
 [Network]
 Bridge=br0
 __EOF__
+
+fi
