@@ -20,6 +20,8 @@ IMAGE_INSTALL = "\
   \
   wpa-supplicant iw iproute2 dhcp-helper tcpdump \
   \
+  wireguard-tools \
+  \
   extra-sysctl \
   \
   parted e2fsprogs-resize2fs e2fsprogs-mke2fs \
