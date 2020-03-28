@@ -1,3 +1,3 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/linux:"
 
-SRC_URI += "file://docker.cfg file://minipc.cfg file://vpn.cfg"
+SRC_URI += "file://docker.cfg file://minipc.cfg file://net.cfg"
