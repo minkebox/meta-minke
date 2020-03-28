@@ -93,6 +93,7 @@ while true; do
     --mount type=bind,source=/mnt,target=/mnt,bind-propagation=rshared \
     --network=host \
     --log-driver json-file --log-opt max-size=100k --log-opt max-file=1 \
+    --oom-kill-disable \
     registry.minkebox.net/minkebox/minke
   case "$(cat ${RESTART_REASON})" in
     update-native) cp /dev/null ${TRACER_OUT} ; systemctl start dnf-automatic-restart ;;
