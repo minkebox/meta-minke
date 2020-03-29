@@ -74,7 +74,6 @@ while true; do
   echo "exit" > ${RESTART_REASON}
   docker run --init --name minke \
     --privileged \
-    --env RESTART_REASON="${REASON}" \
     --mount type=bind,source=/etc/timezone,target=/etc/timezone,bind-propagation=rshared \
     --mount type=bind,source=/etc/hostname,target=/etc/hostname,bind-propagation=rshared \
     --mount type=bind,source=/etc/fstab,target=/etc/fstab,bind-propagation=rshared \
@@ -82,16 +81,14 @@ while true; do
     --mount type=bind,source=/lib/systemd/network/80-wifi.network,target=/etc/systemd/network/wlan.network,bind-propagation=rshared \
     --mount type=bind,source=/lib/systemd/network/80-wired.network,target=/etc/systemd/network/wired.network,bind-propagation=rshared \
     --mount type=bind,source=/etc/wpa_supplicant/wpa_supplicant-wlan0.conf,target=/etc/wpa_supplicant.conf,bind-propagation=rshared \
+    --mount type=bind,source=/mnt,target=/mnt,bind-propagation=rshared \
     --mount type=bind,source=${RESTART_REASON},target=${RESTART_REASON},bind-propagation=rshared \
     --mount type=bind,source=${TRACER_OUT},target=${TRACER_OUT},bind-propagation=rshared \
     --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock,bind-propagation=rshared \
-    --mount type=bind,source=/minke/apps,target=/minke/apps,bind-propagation=rshared \
-    --mount type=bind,source=/minke/db,target=/minke/db,bind-propagation=rshared \
-    --mount type=bind,source=/minke/minkebox.config,target=/minke/minkebox.config,bind-propagation=rshared \
-    --mount type=bind,source=/minke/skeletons/local,target=/app/skeletons/local,bind-propagation=rshared \
-    --mount type=bind,source=/minke/skeletons/internal,target=/app/skeletons/internal,bind-propagation=rshared \
-    --mount type=bind,source=/mnt,target=/mnt,bind-propagation=rshared \
+    --mount type=bind,source=/minke,target=/minke,bind-propagation=rshared \
     --network=host \
+    --env RESTART_REASON="${REASON}" \
+    --env SYSTEM="1" \
     --log-driver json-file --log-opt max-size=100k --log-opt max-file=1 \
     --oom-kill-disable \
     registry.minkebox.net/minkebox/minke
