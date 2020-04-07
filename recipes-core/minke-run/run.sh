@@ -34,6 +34,12 @@ if [ "$(docker network inspect home > /dev/null 2>&1 && echo 'exists')" = "exist
   reboot
 fi
 
+# Create DNS network device
+# We need this to exist on the host so we can use it inside MinkeBox. If we try to attach this
+# interface to the MinkeBox via a Docker network it will fail.
+ip link add name dns0 type bridge
+ip link set dns0 up
+
 # If WLAN is active, we setup the proxy services to copy traffic from wlan to the bridge.
 # WiFi doesn't support bridging natively :-(
 if [ -f /tmp/pre-docker-wlan-active ]; then
@@ -63,7 +69,7 @@ fi
 rm -rf /etc/resolv.conf
 echo "nameserver 127.0.0.1" > /etc/resolv.conf
 
-RESTART_REASON=/tmp/minke-restart-reason
+RESTART_REASON=/minke/minke-restart-reason
 echo "exit" > ${RESTART_REASON}
 TRACER_OUT=/tmp/tracer.out
 cp /dev/null ${TRACER_OUT}
@@ -82,7 +88,6 @@ while true; do
     --mount type=bind,source=/lib/systemd/network/80-wired.network,target=/etc/systemd/network/wired.network,bind-propagation=rshared \
     --mount type=bind,source=/etc/wpa_supplicant/wpa_supplicant-wlan0.conf,target=/etc/wpa_supplicant.conf,bind-propagation=rshared \
     --mount type=bind,source=/mnt,target=/mnt,bind-propagation=rshared \
-    --mount type=bind,source=${RESTART_REASON},target=${RESTART_REASON},bind-propagation=rshared \
     --mount type=bind,source=${TRACER_OUT},target=${TRACER_OUT},bind-propagation=rshared \
     --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock,bind-propagation=rshared \
     --mount type=bind,source=/minke,target=/minke,bind-propagation=rshared \
