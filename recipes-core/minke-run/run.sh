@@ -66,6 +66,7 @@ if [ -f /tmp/pre-docker-wlan-active ]; then
 fi
 
 # Use the local nameserver
+systemctl stop systemd-resolved
 rm -rf /etc/resolv.conf
 echo "nameserver 127.0.0.1" > /etc/resolv.conf
 
@@ -111,6 +112,7 @@ docker network rm home
 
 rm -f /etc/resolv.conf
 ln -s /etc/resolv-conf.systemd /etc/resolv.conf
+systemctl start systemd-resolved
 
 case "$(cat ${RESTART_REASON})" in
   halt) systemctl poweroff ;;
