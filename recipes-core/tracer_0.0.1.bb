@@ -26,7 +26,7 @@ do_install() {
   chown root:root -R ${D}${datadir}/tracer
 
   (cd ${D}${datadir}/tracer ; patch -p1 < ${THISDIR}/${PN}/py2topy3.patch)
-  (cd ${D}${datadir}/tracer ; patch -p1 < ${THISDIR}/${PN}/metaclass.patch)
+  #(cd ${D}${datadir}/tracer ; patch -p1 < ${THISDIR}/${PN}/metaclass.patch)
 
   install -d ${D}${bindir}
   ln -s ${datadir}/tracer/bin/tracer.py ${D}${bindir}/tracer
