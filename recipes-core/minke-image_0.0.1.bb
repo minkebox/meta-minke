@@ -22,6 +22,7 @@ IMAGE_INSTALL = "\
   wireguard-tools \
   \
   extra-sysctl \
+  rng-tools \
   \
   parted e2fsprogs-resize2fs e2fsprogs-mke2fs \
   \
