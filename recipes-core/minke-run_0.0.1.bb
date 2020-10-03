@@ -11,7 +11,7 @@ RPROVIDES_${PN} = "minke-run"
 
 SRCREV = "master"
 PR = "r1"
-SRC_URI += "file://minke.service file://predocker.service file://run.sh file://prerun.sh file://minke-tmpfiles.conf"
+SRC_URI += "file://minke.service file://predocker.service file://run.sh file://prerun.sh file://restart.sh file://minke-tmpfiles.conf"
 
 SYSTEMD_SERVICE_${PN} = "minke.service predocker.service"
 SYSTEMD_AUTO_ENABLE_${PN} = "enable"
@@ -28,6 +28,7 @@ do_install() {
   install -d ${D}${datadir}/minke
   install -m 0755 ${WORKDIR}/run.sh ${D}${datadir}/minke
   install -m 0755 ${WORKDIR}/prerun.sh ${D}${datadir}/minke
+  install -m 0755 ${WORKDIR}/restart.sh ${D}${datadir}/minke
 
   install -d ${D}${nonarch_libdir}/tmpfiles.d
   install -m 0644 ${WORKDIR}/minke-tmpfiles.conf ${D}${nonarch_libdir}/tmpfiles.d/minke.conf
