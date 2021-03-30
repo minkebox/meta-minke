@@ -17,7 +17,8 @@ SYSTEMD_SERVICE_${PN} = "minke.service predocker.service"
 SYSTEMD_AUTO_ENABLE_${PN} = "enable"
 
 IMAGENAMES = "minke minke-helper"
-IMAGEVERSION = "latest"
+IMAGE_VERSION ?= "latest"
+IMAGE_REGISTRY ?= "registry.minkebox.net"
 
 
 do_install() {
@@ -39,8 +40,8 @@ do_install() {
     *)                echo "${MACHINE} not supported"; exit 1 ;;
   esac
   for imagename in ${IMAGENAMES}; do
-    /usr/bin/docker pull --platform ${IMAGEPLATFORM} registry.minkebox.net/minkebox/${imagename}:${IMAGEVERSION}
-    /usr/bin/docker image save registry.minkebox.net/minkebox/${imagename}:${IMAGEVERSION} -o ${D}${datadir}/minke/${imagename}.tar
+    /usr/bin/docker pull --platform ${IMAGEPLATFORM} ${IMAGE_REGISTRY}/minkebox/${imagename}:${IMAGE_VERSION}
+    /usr/bin/docker image save ${IMAGE_REGISTRY}/minkebox/${imagename}:${IMAGE_VERSION} -o ${D}${datadir}/minke/${imagename}.tar
     gzip ${D}${datadir}/minke/${imagename}.tar
   done
   chown root:root -R ${D}${datadir}/minke
