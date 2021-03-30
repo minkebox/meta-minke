@@ -6,8 +6,10 @@ IP=$(ip addr show dev ${IFACE} | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | he
 if [ "${IP}" = "" ]; then
   IFACE=br0
   IP=$(ip addr show dev ${IFACE} | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n1)
+  systemctl disable wpa_supplicant
 else
   touch /tmp/pre-docker-wlan-active
+  systemctl enable wpa_supplicant
 fi
 
 # Note first run
